@@ -17,7 +17,6 @@
  */
 package org.apache.storm.redis.trident.state;
 
-import org.apache.storm.redis.common.mapper.RedisDataTypeDescription;
 import storm.trident.state.Serializer;
 
 import java.io.Serializable;

@@ -53,5 +53,24 @@ public interface KeyFactory extends Serializable {
 			return (String) key.get(0);
 		}
 	}
+
+	/**
+	 * Static Key Factory
+	 */
+	class StaticKeyFactory implements KeyFactory {
+		public String staticKey = "";
+
+		public StaticKeyFactory(String staticKey) {
+			this.staticKey = staticKey;
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public String build(List<Object> key) {
+			return this.staticKey;
+		}
+	}
 }
 

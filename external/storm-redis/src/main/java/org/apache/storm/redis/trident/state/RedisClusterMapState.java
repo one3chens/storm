@@ -21,7 +21,6 @@ import backtype.storm.task.IMetricsContext;
 import backtype.storm.tuple.Values;
 import com.google.common.collect.Lists;
 import org.apache.storm.redis.common.config.JedisClusterConfig;
-import org.apache.storm.redis.common.mapper.RedisDataTypeDescription;
 import redis.clients.jedis.JedisCluster;
 import storm.trident.state.OpaqueValue;
 import storm.trident.state.Serializer;
@@ -41,6 +40,7 @@ import java.util.Map;
 
 /**
  * IBackingMap implementation for Redis Cluster environment.
+ * TODO: Fix this to behave similar to RedisMapState
  *
  * @param <T> value's type class
  * @see AbstractRedisMapState
@@ -187,6 +187,16 @@ public class RedisClusterMapState<T> extends AbstractRedisMapState<T> {
         return new Factory(jedisClusterConfig, StateType.NON_TRANSACTIONAL, opts);
     }
 
+    @Override
+    public List<T> multiGet(List<List<Object>> keys) {
+        return null;
+    }
+
+    @Override
+    public void multiPut(List<List<Object>> keys, List<T> vals) {
+
+    }
+
     /**
      * RedisClusterMapState.Factory provides Redis Cluster environment version of StateFactory.
      */
@@ -285,18 +295,6 @@ public class RedisClusterMapState<T> extends AbstractRedisMapState<T> {
         return serializer;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected KeyFactory getKeyFactory() {
-        return keyFactory;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     protected List<String> retrieveValuesFromRedis(List<String> keys) {
         String[] stringKeys = keys.toArray(new String[keys.size()]);
         RedisDataTypeDescription description = this.options.dataTypeDescription;
@@ -312,17 +310,13 @@ public class RedisClusterMapState<T> extends AbstractRedisMapState<T> {
             return values;
 
         case HASH:
-            return jedisCluster.hmget(description.getAdditionalKey(), stringKeys);
+            return jedisCluster.hmget("", stringKeys);
 
         default:
             throw new IllegalArgumentException("Cannot process such data type: " + description.getDataType());
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     protected void updateStatesToRedis(Map<String, String> keyValues) {
         RedisDataTypeDescription description = this.options.dataTypeDescription;
         switch (description.getDataType()) {
@@ -337,9 +331,9 @@ public class RedisClusterMapState<T> extends AbstractRedisMapState<T> {
             break;
 
         case HASH:
-            jedisCluster.hmset(description.getAdditionalKey(), keyValues);
+            jedisCluster.hmset("", keyValues);
             if (this.options.expireIntervalSec > 0) {
-                jedisCluster.expire(description.getAdditionalKey(), this.options.expireIntervalSec);
+                jedisCluster.expire("", this.options.expireIntervalSec);
             }
             break;
 
