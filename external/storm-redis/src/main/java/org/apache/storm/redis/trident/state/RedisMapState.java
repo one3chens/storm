@@ -254,6 +254,16 @@ public class RedisMapState<T> extends AbstractRedisMapState<T> {
         }
     }
 
+    protected class FieldPair {
+        public int index;
+        public String fieldName;
+
+        public FieldPair(int index, String fieldName) {
+            this.index = index;
+            this.fieldName = fieldName;
+        }
+    }
+
     private JedisPool jedisPool;
     private Options options;
 
@@ -298,7 +308,6 @@ public class RedisMapState<T> extends AbstractRedisMapState<T> {
 
         RedisDataTypeDescription description = this.options.dataTypeDescription;
         Jedis jedis = null;
-        List<String> values = null;
 
         try {
             jedis = jedisPool.getResource();
@@ -307,34 +316,43 @@ public class RedisMapState<T> extends AbstractRedisMapState<T> {
                 case STRING:
                     List<String> stringKeys = buildKeys(this.options.keyFactory, keys);
                     String[] keysArray = stringKeys.toArray(new String[stringKeys.size()]);
-                    values = jedis.mget(keysArray);
-                    break;
-                case HASH:
-                    Map<String, List<String>> hashMap = new HashMap<>();
 
-                    for(List<Object> key: keys) {
-                        String keyName = this.options.keyFactory.build(key);
-                        String fieldName = description.getFieldNameFactory().build(key);
+                    return deserializeValues(keys, jedis.mget(keysArray));
+                case HASH:
+                    // This assumes that more hgets are more expensive than fewer hmgets,
+                    // but it's more complex and requires more processing here
+                    Map<String, List<FieldPair>> hashMap = new HashMap<>();
+                    List<String> values = new ArrayList<>(keys.size());
+
+                    for(int i = 0; i < keys.size(); i++) {
+                        values.add(null);
+                        String keyName = this.options.keyFactory.build(keys.get(i));
+                        String fieldName = description.getFieldNameFactory().build(keys.get(i));
+
+                        FieldPair field = new FieldPair(i, fieldName);
 
                         if(hashMap.containsKey(keyName))
-                            hashMap.get(keyName).add(fieldName);
+                            hashMap.get(keyName).add(field);
                         else {
-                            List<String> list = new ArrayList<>();
-                            list.add(fieldName);
+                            List<FieldPair> list = new ArrayList<>();
+                            list.add(field);
                             hashMap.put(keyName, list);
                         }
                     }
 
-                    for (Map.Entry<String, List<String>> entry: hashMap.entrySet()) {
-                        String[] fieldsArray = entry.getValue().toArray(new String[entry.getValue().size()]);
-                        values = jedis.hmget(entry.getKey(), fieldsArray);
+                    for (Map.Entry<String, List<FieldPair>> entry: hashMap.entrySet()) {
+                        String[] fieldsArray = new String[entry.getValue().size()];
+                        for(int i = 0; i < entry.getValue().size(); i++)
+                            fieldsArray[i] = entry.getValue().get(i).fieldName;
+                        List<String> tempValues = jedis.hmget(entry.getKey(), fieldsArray);
+                        for(int i = 0; i < tempValues.size(); i++)
+                            values.set(entry.getValue().get(i).index, tempValues.get(i));
                     }
-                    break;
+
+                    return deserializeValues(keys, values);
                 default:
                     throw new IllegalArgumentException("Cannot process such data type: " + description.getDataType());
             }
-
-            return deserializeValues(keys, values);
         } finally {
             if (jedis != null) {
                 jedis.close();
