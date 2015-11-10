@@ -306,16 +306,15 @@ public class RedisMapState<T> extends AbstractRedisMapState<T> {
             switch (description.getDataType()) {
                 case STRING:
                     List<String> stringKeys = buildKeys(this.options.keyFactory, keys);
-                    String[] keysArray = keys.toArray(new String[stringKeys.size()]);
+                    String[] keysArray = stringKeys.toArray(new String[stringKeys.size()]);
                     values = jedis.mget(keysArray);
                     break;
                 case HASH:
                     Map<String, List<String>> hashMap = new HashMap<>();
-                    values = new ArrayList<>();
 
-                    for (int i = 0; i < keys.size(); i++) {
-                        String keyName = this.options.keyFactory.build(keys.get(i));
-                        String fieldName = description.getFieldNameFactory().build(keys.get(i));
+                    for(List<Object> key: keys) {
+                        String keyName = this.options.keyFactory.build(key);
+                        String fieldName = description.getFieldNameFactory().build(key);
 
                         if(hashMap.containsKey(keyName))
                             hashMap.get(keyName).add(fieldName);
@@ -328,7 +327,7 @@ public class RedisMapState<T> extends AbstractRedisMapState<T> {
 
                     for (Map.Entry<String, List<String>> entry: hashMap.entrySet()) {
                         String[] fieldsArray = entry.getValue().toArray(new String[entry.getValue().size()]);
-                        values.addAll(jedis.hmget(entry.getKey(), fieldsArray));
+                        values = jedis.hmget(entry.getKey(), fieldsArray);
                     }
                     break;
                 default:
