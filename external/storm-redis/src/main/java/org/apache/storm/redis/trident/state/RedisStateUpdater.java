@@ -19,9 +19,12 @@ package org.apache.storm.redis.trident.state;
 
 import org.apache.storm.redis.common.mapper.RedisDataTypeDescription;
 import org.apache.storm.redis.common.mapper.RedisStoreMapper;
+
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
+import storm.trident.tuple.TridentTuple;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -54,15 +57,15 @@ public class RedisStateUpdater extends AbstractRedisStateUpdater<RedisState> {
      * {@inheritDoc}
      */
     @Override
-    protected void updateStatesToRedis(RedisState redisState, Map<String, String> keyToValue) {
+    protected void updateStatesToRedis(RedisState redisState, List<TridentTuple> inputs, RedisStoreMapper storeMapper) {
         Jedis jedis = null;
         try {
             jedis = redisState.getJedis();
             Pipeline pipeline = jedis.pipelined();
 
-            for (Map.Entry<String, String> kvEntry : keyToValue.entrySet()) {
-                String key = kvEntry.getKey();
-                String value = kvEntry.getValue();
+            for (TridentTuple input : inputs) {
+                String key = storeMapper.getKeyFromTuple(input);
+                String value = storeMapper.getValueFromTuple(input);
 
                 switch (dataType) {
                 case STRING:
@@ -71,6 +74,10 @@ public class RedisStateUpdater extends AbstractRedisStateUpdater<RedisState> {
                     } else {
                         pipeline.set(key, value);
                     }
+                    break;
+                case SET:
+                    pipeline.sadd(key, value);
+                    pipeline.expire(key, expireIntervalSec);
                     break;
                 case HASH:
                     pipeline.hset(additionalKey, key, value);

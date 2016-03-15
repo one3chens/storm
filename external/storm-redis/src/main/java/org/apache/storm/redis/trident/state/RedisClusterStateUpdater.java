@@ -19,8 +19,11 @@ package org.apache.storm.redis.trident.state;
 
 import org.apache.storm.redis.common.mapper.RedisDataTypeDescription;
 import org.apache.storm.redis.common.mapper.RedisStoreMapper;
-import redis.clients.jedis.JedisCluster;
 
+import redis.clients.jedis.JedisCluster;
+import storm.trident.tuple.TridentTuple;
+
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -53,14 +56,13 @@ public class RedisClusterStateUpdater extends AbstractRedisStateUpdater<RedisClu
      * {@inheritDoc}
      */
     @Override
-    protected void updateStatesToRedis(RedisClusterState redisClusterState, Map<String, String> keyToValue) {
+    protected void updateStatesToRedis(RedisClusterState redisClusterState, List<TridentTuple> inputs, RedisStoreMapper storeMapper) {
         JedisCluster jedisCluster = null;
         try {
             jedisCluster = redisClusterState.getJedisCluster();
-
-            for (Map.Entry<String, String> kvEntry : keyToValue.entrySet()) {
-                String key = kvEntry.getKey();
-                String value = kvEntry.getValue();
+            for (TridentTuple input : inputs) {
+                String key = storeMapper.getKeyFromTuple(input);
+                String value = storeMapper.getValueFromTuple(input);
 
                 switch (dataType) {
                 case STRING:
@@ -69,6 +71,10 @@ public class RedisClusterStateUpdater extends AbstractRedisStateUpdater<RedisClu
                     } else {
                         jedisCluster.set(key, value);
                     }
+                    break;
+                case SET:
+                    jedisCluster.sadd(key, value);
+                    jedisCluster.expire(key, expireIntervalSec);
                     break;
                 case HASH:
                     jedisCluster.hset(additionalKey, key, value);

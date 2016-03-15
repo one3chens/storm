@@ -55,6 +55,7 @@ public class RedisState implements State {
         public static final redis.clients.jedis.JedisPoolConfig DEFAULT_POOL_CONFIG = new redis.clients.jedis.JedisPoolConfig();
 
         private JedisPoolConfig jedisPoolConfig;
+        public String objectName;
 
         /**
          * Constructor
@@ -64,6 +65,16 @@ public class RedisState implements State {
         public Factory(JedisPoolConfig config) {
             this.jedisPoolConfig = config;
         }
+        /**
+         * Store objectName for persisting state to Hash (additional key)
+         * @param config
+         * @param objectName
+         */
+        public Factory(JedisPoolConfig config, String objectName) {
+            this.jedisPoolConfig = config;
+            this.objectName = objectName;
+        }
+
 
         /**
          * {@inheritDoc}
