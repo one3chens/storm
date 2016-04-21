@@ -23,8 +23,8 @@ import org.apache.storm.StormSubmitter;
 import org.apache.storm.generated.StormTopology;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Values;
-import org.apache.storm.redis.common.mapper.RedisDataTypeDescription;
-import org.apache.storm.redis.common.mapper.TupleMapper;
+import org.apache.storm.redis.trident.state.KeyFactory;
+import org.apache.storm.redis.trident.state.RedisDataTypeDescription;
 import org.apache.storm.redis.trident.state.RedisClusterMapState;
 import org.apache.storm.redis.common.config.JedisClusterConfig;
 import org.apache.storm.trident.Stream;
@@ -58,7 +58,7 @@ public class WordCountTridentRedisClusterMap {
         JedisClusterConfig clusterConfig = new JedisClusterConfig.Builder().setNodes(nodes)
                                         .build();
         RedisDataTypeDescription dataTypeDescription = new RedisDataTypeDescription(
-                RedisDataTypeDescription.RedisDataType.HASH, "test");
+                RedisDataTypeDescription.RedisDataType.HASH, new KeyFactory.StaticKeyFactory("test"));
         StateFactory factory = RedisClusterMapState.transactional(clusterConfig, dataTypeDescription);
 
         TridentTopology topology = new TridentTopology();

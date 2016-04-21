@@ -74,23 +74,15 @@ public abstract class AbstractRedisStateUpdater<T extends State> extends BaseSta
 	@Override
 	public void updateState(T state, List<TridentTuple> inputs,
 			TridentCollector collector) {
-		Map<String, String> keyToValue = new HashMap<String, String>();
-
-		for (TridentTuple input : inputs) {
-			String key = storeMapper.getKeyFromTuple(input);
-			String value = storeMapper.getValueFromTuple(input);
-
-			keyToValue.put(key, value);
-		}
-
-		updateStatesToRedis(state, keyToValue);
+		updateStatesToRedis(state, inputs, this.storeMapper);
 	}
 
 	/**
 	 * Updates (key, value) pairs to Redis.
 	 *
 	 * @param state State for handling query
-	 * @param keyToValue (key, value) pairs
+	 * @param inputs List of tuples to persist
+	 * @param storeMapper RedisStoreMapper
 	 */
-	protected abstract void updateStatesToRedis(T state, Map<String, String> keyToValue);
+	protected abstract void updateStatesToRedis(T state, List<TridentTuple> inputs, RedisStoreMapper storeMapper);
 }

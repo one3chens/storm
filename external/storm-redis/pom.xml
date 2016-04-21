@@ -21,11 +21,12 @@
     <parent>
         <artifactId>storm</artifactId>
         <groupId>org.apache.storm</groupId>
-        <version>2.0.0-SNAPSHOT</version>
+        <version>1.0.0</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>storm-redis</artifactId>
+    <version>1.0.0-jw1</version>
 
     <developers>
         <developer>
@@ -48,7 +49,7 @@
         <dependency>
             <groupId>org.apache.storm</groupId>
             <artifactId>storm-core</artifactId>
-            <version>${project.version}</version>
+            <version>1.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>

@@ -27,11 +27,8 @@ import org.apache.storm.trident.state.StateType;
 import org.apache.storm.trident.state.map.IBackingMap;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * AbstractRedisMapState is base class of any RedisMapState, which implements IBackingMap.
@@ -52,50 +49,17 @@ public abstract class AbstractRedisMapState<T> implements IBackingMap<T> {
 			StateType.OPAQUE, new JSONOpaqueSerializer()
 	));
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override public List<T> multiGet(List<List<Object>> keys) {
-		if (keys.size() == 0) {
-			return Collections.emptyList();
-		}
-
-		List<String> stringKeys = buildKeys(keys);
-		List<String> values = retrieveValuesFromRedis(stringKeys);
-
-		return deserializeValues(keys, values);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void multiPut(List<List<Object>> keys, List<T> vals) {
-		if (keys.size() == 0) {
-			return;
-		}
-
-		Map<String, String> keyValues = new HashMap<String, String>();
-		for (int i = 0; i < keys.size(); i++) {
-			String val = new String(getSerializer().serialize(vals.get(i)));
-			String redisKey = getKeyFactory().build(keys.get(i));
-			keyValues.put(redisKey, val);
-		}
-
-		updateStatesToRedis(keyValues);
-	}
-
-	private List<String> buildKeys(List<List<Object>> keys) {
+	protected List<String> buildKeys(KeyFactory keyFactory, List<List<Object>> keys) {
 		List<String> stringKeys = new ArrayList<String>();
 
 		for (List<Object> key : keys) {
-			stringKeys.add(getKeyFactory().build(key));
+			stringKeys.add(keyFactory.build(key));
 		}
 
 		return stringKeys;
 	}
 
-	private List<T> deserializeValues(List<List<Object>> keys, List<String> values) {
+	protected List<T> deserializeValues(List<List<Object>> keys, List<String> values) {
 		List<T> result = new ArrayList<T>(keys.size());
 		for (String value : values) {
 			if (value != null) {
@@ -113,25 +77,4 @@ public abstract class AbstractRedisMapState<T> implements IBackingMap<T> {
 	 * @return serializer
 	 */
 	protected abstract Serializer getSerializer();
-
-	/**
-	 * Returns KeyFactory which is used for converting state key -> Redis key.
-	 * @return key factory
-	 */
-	protected abstract KeyFactory getKeyFactory();
-
-	/**
-	 * Retrieves values from Redis that each value is corresponding to each key.
-	 *
-	 * @param keys keys having state values
-	 * @return values which are corresponding to keys
-	 */
-	protected abstract List<String> retrieveValuesFromRedis(List<String> keys);
-
-	/**
-	 * Updates (key, value) pairs to Redis.
-	 *
-	 * @param keyValues (key, value) pairs
-	 */
-	protected abstract void updateStatesToRedis(Map<String, String> keyValues);
 }
