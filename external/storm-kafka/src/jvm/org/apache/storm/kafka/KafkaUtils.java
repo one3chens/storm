@@ -250,6 +250,15 @@ public class KafkaUtils {
         return scheme.deserializeMessageWithMetadata(payload, partition, offset);
     }
 
+    public static Iterable<List<Object>> generateTuples(FullSchemeAsMultiScheme scheme, Message msg, Partition partition, long offset) {
+        ByteBuffer key = msg.key();
+        ByteBuffer value = msg.payload();
+        if (value == null) {
+            return null;
+        }
+        return scheme.deserialize(key, value, partition, offset);
+    }
+
 
     public static List<Partition> calculatePartitionsForTask(List<GlobalPartitionInformation> partitons, int totalTasks, int taskIndex) {
         Preconditions.checkArgument(taskIndex < totalTasks, "task index must be less that total tasks");

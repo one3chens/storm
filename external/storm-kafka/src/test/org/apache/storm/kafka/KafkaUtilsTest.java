@@ -208,6 +208,30 @@ public class KafkaUtilsTest {
         }
     }
 
+    @Test
+    public void generateTuplesWithFullScheme() {
+        String key = "key";
+        String value = "value";
+        Partition mockPartition = Mockito.mock(Partition.class);
+        mockPartition.topic = config.topic;
+        mockPartition.partition = 0;
+        long offset = 0L;
+
+        FullSchemeAsMultiScheme scheme = new FullSchemeAsMultiScheme(new StringFullScheme());
+
+        createTopicAndSendMessage(key, value);
+        ByteBufferMessageSet messageAndOffsets = getLastMessage();
+        for (MessageAndOffset msg : messageAndOffsets) {
+            Iterable<List<Object>> lists = KafkaUtils.generateTuples(scheme, msg.message(), mockPartition, offset);
+            List<Object> values = lists.iterator().next();
+            assertEquals("Key is incorrect", key, values.get(0));
+            assertEquals("Value is incorrect", value, values.get(1));
+            assertEquals("Topic is incorrect", config.topic, values.get(2));
+            assertEquals("Partition is incorrect", mockPartition.partition, values.get(3));
+            assertEquals("Offset is incorrect", offset, values.get(4));
+        }
+    }
+
     private ByteBufferMessageSet getLastMessage() {
         long offsetOfLastMessage = KafkaUtils.getOffset(simpleConsumer, config.topic, 0, OffsetRequest.LatestTime()) - 1;
         return KafkaUtils.fetchMessages(config, simpleConsumer, new Partition(Broker.fromString(broker.getBrokerConnectionString()), TEST_TOPIC, 0), offsetOfLastMessage);

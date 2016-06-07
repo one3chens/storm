@@ -182,6 +182,8 @@ public class TridentKafkaEmitter {
         Iterable<List<Object>> values;
         if (_config.scheme instanceof MessageMetadataSchemeAsMultiScheme) {
             values = KafkaUtils.generateTuples((MessageMetadataSchemeAsMultiScheme) _config.scheme, msg, partition, offset);
+        } else if (_config.scheme instanceof FullSchemeAsMultiScheme) {
+            values = KafkaUtils.generateTuples((FullSchemeAsMultiScheme) _config.scheme, msg, partition, offset);
         } else {
             values = KafkaUtils.generateTuples(_config, msg, partition.topic);
         }

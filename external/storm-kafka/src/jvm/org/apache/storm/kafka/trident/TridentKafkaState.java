@@ -40,7 +40,6 @@ public class TridentKafkaState implements State {
     private static final Logger LOG = LoggerFactory.getLogger(TridentKafkaState.class);
 
     private KafkaProducer producer;
-    private OutputCollector collector;
 
     private TridentTupleToKafkaMapper mapper;
     private KafkaTopicSelector topicSelector;
@@ -62,7 +61,7 @@ public class TridentKafkaState implements State {
 
     @Override
     public void commit(Long txid) {
-        LOG.debug("commit is Noop.");
+        this.producer.flush();
     }
 
     public void prepare(Properties options) {
