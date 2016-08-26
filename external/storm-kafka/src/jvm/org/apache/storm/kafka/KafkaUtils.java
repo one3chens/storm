@@ -50,7 +50,7 @@ public class KafkaUtils {
 
     public static final Logger LOG = LoggerFactory.getLogger(KafkaUtils.class);
     private static final int NO_OFFSET = -5;
-    private static int KAFKA_ERROR_COUNT = 0;
+    private static int kafka_error_count = 0;
 
     //suppress default constructor for noninstantiablility
     private KafkaUtils(){
@@ -216,18 +216,18 @@ public class KafkaUtils {
             } 
             else if (error.equals(KafkaError.NOT_LEADER_FOR_PARTITION) ) {
                 
-                if(KAFKA_ERROR_COUNT < 5){
+                if(kafka_error_count < 5){
                     
                     try {
                         TimeUnit.SECONDS.sleep(5);
                     } catch (InterruptedException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
+                        
+                        LOG.warn(e.getMessage());
                     }
                     fetchMessages(config,consumer,partition,offset);
                     
                     
-                    KAFKA_ERROR_COUNT++;
+                    kafka_error_count++;
                 }
                 else{
                             String message = "Error fetching data from [" + partition + "] for topic [" + topic + "]: [" + error + "]";
