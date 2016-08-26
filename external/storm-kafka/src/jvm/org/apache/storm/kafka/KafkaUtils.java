@@ -33,6 +33,7 @@ import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.channels.UnresolvedAddressException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import kafka.api.FetchRequest;
 import kafka.api.FetchRequestBuilder;
@@ -49,6 +50,7 @@ public class KafkaUtils {
 
     public static final Logger LOG = LoggerFactory.getLogger(KafkaUtils.class);
     private static final int NO_OFFSET = -5;
+    private static int KAFKA_ERROR_COUNT = 0;
 
     //suppress default constructor for noninstantiablility
     private KafkaUtils(){
@@ -211,7 +213,30 @@ public class KafkaUtils {
                 String msg = partition + " Got fetch request with offset out of range: [" + offset + "]";
                 LOG.warn(msg);
                 throw new TopicOffsetOutOfRangeException(msg);
-            } else {
+            } 
+            else if (error.equals(KafkaError.NOT_LEADER_FOR_PARTITION) ) {
+                
+                if(KAFKA_ERROR_COUNT < 5){
+                    
+                    try {
+                        TimeUnit.SECONDS.sleep(5);
+                    } catch (InterruptedException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                    fetchMessages(config,consumer,partition,offset);
+                    
+                    
+                    KAFKA_ERROR_COUNT++;
+                }
+                else{
+                            String message = "Error fetching data from [" + partition + "] for topic [" + topic + "]: [" + error + "]";
+                            LOG.error(message);
+                            throw new FailedFetchException(message);
+                }
+            }
+            
+            else {
                 String message = "Error fetching data from [" + partition + "] for topic [" + topic + "]: [" + error + "]";
                 LOG.error(message);
                 throw new FailedFetchException(message);
