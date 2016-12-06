@@ -19,7 +19,9 @@ package storm.kafka;
 
 import backtype.storm.spout.SchemeAsMultiScheme;
 import backtype.storm.utils.Utils;
+
 import com.google.common.collect.ImmutableMap;
+
 import kafka.api.OffsetRequest;
 import kafka.javaapi.consumer.SimpleConsumer;
 import kafka.javaapi.message.ByteBufferMessageSet;
@@ -27,9 +29,12 @@ import kafka.javaapi.producer.Producer;
 import kafka.message.MessageAndOffset;
 import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
+
 import storm.kafka.trident.GlobalPartitionInformation;
 
 import java.util.List;
@@ -107,6 +112,30 @@ public class KafkaUtilsTest {
         createTopicAndSendMessage(value);
         KafkaUtils.fetchMessages(config, simpleConsumer,
                 new Partition(Broker.fromString(broker.getBrokerConnectionString()), 0, TOPIC), -99);
+    }
+
+    @Test
+    public void generateTuplesWithFullScheme() {
+        String key = "key";
+        String value = "value";
+        Partition mockPartition = Mockito.mock(Partition.class);
+        mockPartition.topic = config.topic;
+        mockPartition.partition = 0;
+        long offset = 0L;
+
+        FullSchemeAsMultiScheme scheme = new FullSchemeAsMultiScheme(new StringFullScheme());
+
+        createTopicAndSendMessage(key, value);
+        ByteBufferMessageSet messageAndOffsets = getLastMessage();
+        for (MessageAndOffset msg : messageAndOffsets) {
+            Iterable<List<Object>> lists = KafkaUtils.generateTuples(scheme, msg.message(), mockPartition, offset);
+            List<Object> values = lists.iterator().next();
+            assertEquals("Key is incorrect", key, values.get(0));
+            assertEquals("Value is incorrect", value, values.get(1));
+            assertEquals("Topic is incorrect", config.topic, values.get(2));
+            assertEquals("Partition is incorrect", mockPartition.partition, values.get(3));
+            assertEquals("Offset is incorrect", offset, values.get(4));
+        }
     }
 
     @Test

@@ -20,8 +20,11 @@ package storm.kafka;
 import backtype.storm.spout.Scheme;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Values;
+import backtype.storm.utils.Utils;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class StringScheme implements Scheme {
@@ -39,7 +42,14 @@ public class StringScheme implements Scheme {
             throw new RuntimeException(e);
         }
     }
-
+    public static String deserializeString(ByteBuffer string) {
+        if (string.hasArray()) {
+            int base = string.arrayOffset();
+            return new String(string.array(), base + string.position(), string.remaining());
+        } else {
+            return new String(Utils.toByteArray(string), StandardCharsets.UTF_8);
+        }
+    }
     public Fields getOutputFields() {
         return new Fields(STRING_SCHEME_KEY);
     }

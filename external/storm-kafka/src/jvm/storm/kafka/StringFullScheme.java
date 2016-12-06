@@ -16,8 +16,8 @@ public class StringFullScheme extends StringScheme implements FullScheme {
 
     @Override
     public List<Object> deserialize(ByteBuffer key, ByteBuffer value, Partition partition, long offset) {
-        String stringKey = StringScheme.deserializeString(key.array());
-        String stringValue = StringScheme.deserializeString(value.array());
+        String stringKey = StringScheme.deserializeString(key);
+        String stringValue = StringScheme.deserializeString(value);
         return new Values(stringKey, stringValue, partition.topic, partition.partition, offset);
     }
 
