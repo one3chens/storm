@@ -208,6 +208,22 @@ public class KafkaUtils {
         return tups;
     }
 
+    public static Iterable<List<Object>> generateTuples(MessageMetadataSchemeAsMultiScheme scheme, Message msg, Partition partition, long offset) {
+        ByteBuffer payload = msg.payload();
+        if (payload == null) {
+            return null;
+        }
+        return scheme.deserializeMessageWithMetadata(payload, partition, offset);
+    }
+
+    public static Iterable<List<Object>> generateTuples(FullSchemeAsMultiScheme scheme, Message msg, Partition partition, long offset) {
+        ByteBuffer key = msg.key();
+        ByteBuffer value = msg.payload();
+        if (value == null) {
+            return null;
+        }
+        return scheme.deserialize(key, value, partition, offset);
+    }
 
     public static List<Partition> calculatePartitionsForTask(GlobalPartitionInformation partitionInformation, int totalTasks, int taskIndex) {
         Preconditions.checkArgument(taskIndex < totalTasks, "task index must be less that total tasks");
