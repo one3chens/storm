@@ -28,8 +28,10 @@ import java.util.*;
 public class GlobalPartitionInformation implements Iterable<Partition>, Serializable {
 
     private Map<Integer, Broker> partitionMap;
+    public String topic;
 
-    public GlobalPartitionInformation() {
+    public GlobalPartitionInformation(String topic) {
+        this.topic = topic;
         partitionMap = new TreeMap<Integer, Broker>();
     }
 
@@ -51,7 +53,8 @@ public class GlobalPartitionInformation implements Iterable<Partition>, Serializ
     public List<Partition> getOrderedPartitions() {
         List<Partition> partitions = new LinkedList<Partition>();
         for (Map.Entry<Integer, Broker> partition : partitionMap.entrySet()) {
-            partitions.add(new Partition(partition.getValue(), partition.getKey()));
+            //1.X has an option to get all topics, but here we assume _isWildcardTopic is false
+            partitions.add(new Partition(partition.getValue(), partition.getKey(), this.topic));
         }
         return partitions;
     }
@@ -59,6 +62,7 @@ public class GlobalPartitionInformation implements Iterable<Partition>, Serializ
     @Override
     public Iterator<Partition> iterator() {
         final Iterator<Map.Entry<Integer, Broker>> iterator = partitionMap.entrySet().iterator();
+        final String topic = this.topic;
 
         return new Iterator<Partition>() {
             @Override
@@ -69,7 +73,7 @@ public class GlobalPartitionInformation implements Iterable<Partition>, Serializ
             @Override
             public Partition next() {
                 Map.Entry<Integer, Broker> next = iterator.next();
-                return new Partition(next.getValue(), next.getKey());
+                return new Partition(next.getValue(), next.getKey(), topic);
             }
 
             @Override

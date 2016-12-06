@@ -25,15 +25,17 @@ public class Partition implements ISpoutPartition {
 
     public Broker host;
     public int partition;
+    public String topic;
 
     // for kryo compatibility
     private Partition() {
 	
     }
     
-    public Partition(Broker host, int partition) {
+    public Partition(Broker host, int partition, String topic) {
         this.host = host;
         this.partition = partition;
+        this.topic = topic;
     }
 
     @Override

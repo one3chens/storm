@@ -18,8 +18,7 @@
 package storm.kafka.trident;
 
 public class StaticBrokerReader implements IBrokerReader {
-
-    private GlobalPartitionInformation brokers = new GlobalPartitionInformation();
+    private GlobalPartitionInformation brokers;
 
     public StaticBrokerReader(GlobalPartitionInformation partitionInformation) {
         this.brokers = partitionInformation;

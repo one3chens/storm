@@ -71,7 +71,7 @@ public class DynamicBrokersReader {
      * Get all partitions with their current leaders
      */
     public GlobalPartitionInformation getBrokerInfo() throws SocketTimeoutException {
-      GlobalPartitionInformation globalPartitionInformation = new GlobalPartitionInformation();
+      GlobalPartitionInformation globalPartitionInformation = new GlobalPartitionInformation(this._topic);
         try {
             int numPartitionsForTopic = getNumPartitions();
             String brokerInfoPath = brokerPath();
