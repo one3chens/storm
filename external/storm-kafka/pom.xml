@@ -27,6 +27,7 @@
 
     <packaging>jar</packaging>
     <artifactId>storm-kafka</artifactId>
+    <version>0.10.0-jw1</version>
     <name>storm-kafka</name>
     <description>Storm Spouts for Apache Kafka</description>
     <build>
