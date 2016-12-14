@@ -121,7 +121,7 @@ public class TridentKafkaEmitter {
 
         long endoffset = offset;
         for (MessageAndOffset msg : msgs) {
-            emit(collector, msg.message(), partition, offset);
+            emit(collector, msg.message(), partition, msg.offset());
             endoffset = msg.nextOffset();
         }
         Map newMeta = new HashMap();
