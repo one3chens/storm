@@ -75,6 +75,10 @@ public class RedisStateUpdater extends AbstractRedisStateUpdater<RedisState> {
                         pipeline.set(key, value);
                     }
                     break;
+                case HYPER_LOG_LOG:
+                    pipeline.pfadd(key, value);
+                    pipeline.expire(key, expireIntervalSec);
+                    break;
                 case SET:
                     pipeline.sadd(key, value);
                     pipeline.expire(key, expireIntervalSec);

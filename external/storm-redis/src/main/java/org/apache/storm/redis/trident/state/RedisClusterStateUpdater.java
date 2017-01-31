@@ -76,6 +76,10 @@ public class RedisClusterStateUpdater extends AbstractRedisStateUpdater<RedisClu
                     jedisCluster.sadd(key, value);
                     jedisCluster.expire(key, expireIntervalSec);
                     break;
+                case HYPER_LOG_LOG:
+                    jedisCluster.pfadd(key, value);
+                    jedisCluster.expire(key, expireIntervalSec);
+                    break;
                 case HASH:
                     jedisCluster.hset(additionalKey, key, value);
                     break;
